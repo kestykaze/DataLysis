@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Titre de la page -->
+<div class="row mb-4">
+    <div class="col">
+        <h1>Mes projets de collecte</h1>
+        <p>Gérez vos projets de collecte et analysez vos données.</p>
+    </div>
+    <div class="col-auto">
+        <a href="/creer" class="btn btn-primary">
+            + Nouveau projet
+        </a>
+    </div>
+</div>
+
+<!-- Liste des projets -->
+{% if projets %}
+
+    <div class="row">
+        {% for projet in projets %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+
+                    <!-- Nom du projet -->
+                    <h5 class="card-title">{{ projet.nom }}</h5>
+
+                    <!-- Description -->
+                    <p class="card-text text-muted">
+                        {{ projet.description }}
+                    </p>
+
+                    <!-- Date de création -->
+                    <small class="text-muted">
+                        Créé le {{ projet.date_creation }}
+                    </small>
+
+                </div>
+                <div class="card-footer">
+    <a href="/saisir/{{ projet.id }}" class="btn btn-primary btn-sm">
+        Saisir des données
+    </a>
+    <a href="/analyser/{{ projet.id }}" class="btn btn-outline-secondary btn-sm">
+        Analyser
+    </a>
+    <form method="POST" action="/supprimer/{{ projet.id }}"
+          onsubmit="return confirm('Supprimer ce projet et toutes ses données ?')">
+        <button type="submit" class="btn btn-outline-danger btn-sm">
+            Supprimer
+        </button>
+    </form>
+</div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+{% else %}
+
+    <!-- Aucun projet -->
+    <div class="text-center mt-5">
+        <h4>Aucun projet pour l'instant</h4>
+        <p class="text-muted">Créez votre premier projet pour commencer.</p>
+        <a href="/creer" class="btn btn-primary">
+            Créer un projet
+        </a>
+    </div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Titre de la page -->
+<div class="row mb-4">
+    <div class="col">
+        <h1>Analyse — {{ projet.nom }}</h1>
+        <p class="text-muted">{{ projet.description }}</p>
+    </div>
+    <div class="col-auto">
+        <a href="/saisir/{{ projet.id }}" class="btn btn-outline-secondary">
+            Saisir des données
+        </a>
+        <a href="/" class="btn btn-outline-secondary">
+            Accueil
+        </a>
+    </div>
+</div>
+
+<!-- Résumé du projet -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Résumé</h5>
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted">Nombre de variables</td>
+                            <td>{{ colonnes|length }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Variables continues</td>
+                            <td>
+                                {% for col in colonnes %}
+                                    {% if types_colonnes[col] == 'continue' %}
+                                        <span>{{ col }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Variables discrètes</td>
+                            <td>
+                                {% for col in colonnes %}
+                                    {% if types_colonnes[col] == 'discrete' %}
+                                        <span>{{ col }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Variables nominales</td>
+                            <td>
+                                {% for col in colonnes %}
+                                    {% if types_colonnes[col] == 'nominale' %}
+                                        <span>{{ col }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 1 — Analyse univariée -->
+<div class="row mb-4">
+    <div class="col">
+        <h2>Analyse univariée</h2>
+        <hr>
+
+        <!-- Tableau des statistiques pour toutes les variables -->
+        {% for col, stats in stats_toutes.items() %}
+        <div class="card mb-4">
+            <div class="card-body">
+
+                <h5 class="card-title">
+                    {{ col }}
+                    <small class="text-muted">
+                        ({{ types_colonnes[col] }})
+                    </small>
+                </h5>
+
+                <!-- Variable quantitative -->
+                {% if types_colonnes[col] in ['continue', 'discrete'] %}
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted">Moyenne</td>
+                            <td>{{ stats.moyenne }}</td>
+                            <td class="text-muted">Médiane</td>
+                            <td>{{ stats.mediane }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Mode</td>
+                            <td>{{ stats.mode }}</td>
+                            <td class="text-muted">Écart-type</td>
+                            <td>{{ stats.ecart_type }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Variance</td>
+                            <td>{{ stats.variance }}</td>
+                            <td class="text-muted">IQR</td>
+                            <td>{{ stats.iqr }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Minimum</td>
+                            <td>{{ stats.min }}</td>
+                            <td class="text-muted">Maximum</td>
+                            <td>{{ stats.max }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Q1</td>
+                            <td>{{ stats.q1 }}</td>
+                            <td class="text-muted">Q3</td>
+                            <td>{{ stats.q3 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Outliers</td>
+                            <td colspan="3">
+                                {% if stats.outliers %}
+                                    {{ stats.outliers }}
+                                {% else %}
+                                    Aucun
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Variable qualitative -->
+                {% else %}
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Valeur</th>
+                            <th>Fréquence absolue</th>
+                            <th>Fréquence relative (%)</th>
+                            <th>Fréquence cumulée (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for valeur, freq in stats.freq_absolue.items() %}
+                        <tr>
+                            <td>{{ valeur }}</td>
+                            <td>{{ freq }}</td>
+                            <td>{{ stats.freq_relative[valeur] }}</td>
+                            <td>{{ stats.freq_cumulee[valeur] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="text-muted">
+                    Mode : {{ stats.mode }} —
+                    Total : {{ stats.total }}
+                </p>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Formulaire pour voir le graphique d'une variable -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Voir le graphique d'une variable</h5>
+                <form method="POST" action="/analyser/{{ projet.id }}">
+                    <input type="hidden" name="action" value="graphique_univ">
+                    <div class="d-flex gap-2">
+                        <select class="form-select" name="variable">
+                            {% for col in colonnes %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            Voir
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Affichage du graphique -->
+                {% if graphique_univ %}
+                <div class="mt-3">
+                    <h6>Graphique — {{ variable_univ }}</h6>
+                    <img
+                        src="data:image/png;base64,{{ graphique_univ }}"
+                        class="img-fluid"
+                        alt="Graphique {{ variable_univ }}"
+                    >
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SECTION 2 — Analyse bivariée -->
+<div class="row mb-4">
+    <div class="col">
+        <h2>Analyse bivariée</h2>
+        <hr>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Choisir deux variables à comparer
+                </h5>
+
+                <form method="POST" action="/analyser/{{ projet.id }}">
+                    <input type="hidden" name="action" value="bivariee">
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <label class="form-label">Variable 1</label>
+                            <select class="form-select" name="variable1">
+                                {% for col in colonnes %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Variable 2</label>
+                            <select class="form-select" name="variable2">
+                                {% for col in colonnes %}
+                                <option value="{{ col }}">{{ col }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                Analyser
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Résultats bivariée -->
+                {% if resultat_biv %}
+                <div class="mt-4">
+
+                    <!-- Quanti × Quanti -->
+                    {% if resultat_biv.type == 'quanti_quanti' %}
+                    <h6>
+                        {{ resultat_biv.variable1 }} vs {{ resultat_biv.variable2 }}
+                    </h6>
+                    <table class="table table-bordered table-sm">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Corrélation</td>
+                                <td>{{ resultat_biv.correlation }}</td>
+                                <td class="text-muted">Covariance</td>
+                                <td>{{ resultat_biv.covariance }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Équation</td>
+                                <td colspan="3">
+                                    {{ resultat_biv.regression.equation }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">R²</td>
+                                <td>{{ resultat_biv.regression.r2 }}</td>
+                                <td class="text-muted">p-value</td>
+                                <td>{{ resultat_biv.regression.p_value }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Quali × Quanti -->
+                    {% elif resultat_biv.type == 'quali_quanti' %}
+                    <h6>
+                        {{ resultat_biv.variable2 }} selon {{ resultat_biv.variable1 }}
+                    </h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ resultat_biv.variable1 }}</th>
+                                <th>Moyenne {{ resultat_biv.variable2 }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for groupe, moyenne in resultat_biv.moyennes.items() %}
+                            <tr>
+                                <td>{{ groupe }}</td>
+                                <td>{{ moyenne }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <!-- Quali × Quali -->
+                    {% elif resultat_biv.type == 'quali_quali' %}
+                    <h6>
+                        {{ resultat_biv.variable1 }} vs {{ resultat_biv.variable2 }}
+                    </h6>
+                    <table class="table table-bordered table-sm">
+                        <tbody>
+                            {% for k, v in resultat_biv.tableau_croise.items() %}
+                            <tr>
+                                <td class="text-muted">{{ k }}</td>
+                                <td>{{ v }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <!-- Erreur -->
+                    {% elif resultat_biv.type == 'erreur' %}
+                    <div class="alert alert-warning">
+                        {{ resultat_biv.message }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Graphique bivariée -->
+                    {% if resultat_biv.graphique %}
+                    <img
+                        src="data:image/png;base64,{{ resultat_biv.graphique }}"
+                        class="img-fluid mt-3"
+                        alt="Graphique bivariée"
+                    >
+                    {% endif %}
+
+                    <!-- Interprétation -->
+                    <div class="alert alert-info mt-3">
+                        {{ resultat_biv.interpretation }}
+                    </div>
+
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

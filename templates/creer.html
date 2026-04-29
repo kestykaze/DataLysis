@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Titre de la page -->
+<div class="row mb-4">
+    <div class="col">
+        <h1>Créer un projet</h1>
+        <p>Définissez votre projet de collecte de données.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+
+                <form method="POST" action="/creer">
+
+                    <!-- Nom du projet -->
+                    <div class="mb-3">
+                        <label for="nom" class="form-label">
+                            Nom du projet
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="nom"
+                            name="nom"
+                            placeholder="Ex: Étude santé Yaoundé"
+                            required
+                        >
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            Description
+                        </label>
+                        <textarea
+                            class="form-control"
+                            id="description"
+                            name="description"
+                            rows="3"
+                            placeholder="Décrivez votre projet..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Variables -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Variables à collecter
+                        </label>
+                        <small class="text-muted d-block mb-2">
+                            Entrez le nom de chaque variable que vous voulez collecter.
+                            Ex: age, poids, ville...
+                        </small>
+
+                        <!-- Zone des variables -->
+                        <div id="variables-container">
+                            <div class="input-group mb-2">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    name="variables"
+                                    placeholder="Ex: age"
+                                >
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-danger"
+                                    onclick="supprimerVariable(this)"
+                                >
+                                    Supprimer
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bouton ajouter une variable -->
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary mt-2"
+                            onclick="ajouterVariable()"
+                        >
+                            + Ajouter une variable
+                        </button>
+
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            Créer le projet
+                        </button>
+                        <a href="/" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript pour ajouter/supprimer des variables -->
+<script>
+    function ajouterVariable() {
+        const container = document.getElementById('variables-container');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input
+                type="text"
+                class="form-control"
+                name="variables"
+                placeholder="Ex: poids"
+            >
+            <button
+                type="button"
+                class="btn btn-outline-danger"
+                onclick="supprimerVariable(this)"
+            >
+                Supprimer
+            </button>
+        `;
+        container.appendChild(div);
+    }
+
+    function supprimerVariable(bouton) {
+        const div = bouton.parentElement;
+        const container = document.getElementById('variables-container');
+        if (container.children.length > 1) {
+            div.remove();
+        } else {
+            alert('Il faut au moins une variable !');
+        }
+    }
+</script>
+
+{% endblock %}
